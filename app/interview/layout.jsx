@@ -4,9 +4,9 @@ import InterviewHeader from "./_components/InterviewHeader";
 import { InterviewDataContext } from "@/context/InterviewDataContext";
 
 function InterviewLayout({ children }) {
-  const [InterviewInfo, setInterviewInfo] = useState();
+  const [interviewInfo, setInterviewInfo] = useState();
   return (
-    <InterviewDataContext.Provider value={{ InterviewInfo, setInterviewInfo }}>
+    <InterviewDataContext.Provider value={{ interviewInfo, setInterviewInfo }}>
       <div className='bg-secondary'>
         <InterviewHeader />
         {children}
