@@ -18,10 +18,54 @@ function StartInterview() {
   const [conversation, setConversation] = useState();
   const { interview_id } = useParams();
   const router = useRouter();
+  const [loading, setLoading] = useState();
 
   useEffect(() => {
     interviewInfo && startCall();
   }, [interviewInfo]);
+
+  useEffect(() => {
+    const handleMessage = (message) => {
+      console.log("Message", message);
+      if (message?.conversation) {
+        const convoString = JSON.stringify(message.conversation);
+        console.log("conversation string:", convoString);
+      }
+    };
+
+    vapi.on("message", handleMessage);
+
+    vapi.on("call-start", () => {
+      // console.log("call has started");
+      toast("Call Connected....");
+    });
+
+    vapi.on("speech-start", () => {
+      // console.log("Assitant speech has started");
+      setActiveUser(false);
+    });
+
+    vapi.on("speech-end", () => {
+      // console.log("Assitant speech has ended");
+      setActiveUser(true);
+    });
+
+    vapi.on("call-end", () => {
+      // console.log("call has ended");
+      toast("Enterview Ended....");
+      GenerateFeedback();
+    });
+
+    //cleanup the listener
+
+    return () => {
+      vapi.off("message", handleMessage);
+      vapi.off("call-start", () => console.log("END"));
+      vapi.off("speech-start", () => console.log("END"));
+      vapi.off("speech-end", () => console.log("END"));
+      vapi.off("call-end", () => console.log("END"));
+    };
+  }, []);
 
   const startCall = () => {
     let questionList;
@@ -91,31 +135,10 @@ Key Guidelines:
     vapi.stop();
   };
 
-  vapi.on("call-start", () => {
-    // console.log("call has started");
-    toast("Call Connected....");
-  });
-
-  vapi.on("speech-start", () => {
-    // console.log("Assitant speech has started");
-    setActiveUser(false);
-  });
-
-  vapi.on("speech-end", () => {
-    // console.log("Assitant speech has ended");
-    setActiveUser(true);
-  });
-
-  vapi.on("call-end", () => {
-    // console.log("call has ended");
-    toast("Enterview Ended....");
-    GenerateFeedback();
-  });
-
-  vapi.on("message", (message) => {
-    // console.log(message?.conversation);
-    setConversation(message?.conversation);
-  });
+  // vapi.on("message", (message) => {
+  //   // console.log(message?.conversation);
+  //   setConversation(message?.conversation);
+  // });
 
   const GenerateFeedback = async () => {
     const results = await axios.post("/api/ai-feedback", {
@@ -149,7 +172,7 @@ Key Guidelines:
       .select();
 
     console.log(data);
-    router.replace("/interview/complited");
+    router.replace("/interview/" + interview_id + "/completed");
   };
 
   return (
@@ -191,12 +214,45 @@ Key Guidelines:
           <h2>{interviewInfo?.userName}</h2>
         </div>
       </div>
-      <div className='flex items-center gap-5 justify-center mt-7'>
+      {/* <div className='flex items-center gap-5 justify-center mt-7'>
         <Mic className='h-10 w-10 p-3 bg-gray-500 rounded-full cursor-pointer' />
         <AlertConfirmation stopInterview={() => stopInterview()}>
+
           <Phone className='h-10 w-10 p-3 bg-red-500 text-white rounded-full cursor-pointer' />
         </AlertConfirmation>
+      </div> */}
+      <div className='flex items-center gap-5 justify-center mt-7'>
+        <Mic className='h-10 w-10 p-3 bg-gray-500 rounded-full cursor-pointer' />
+
+        <AlertConfirmation stopInterview={() => stopInterview()}>
+          {loading ? (
+            <div className='h-10 w-10 p-3 flex items-center justify-center bg-red-500 rounded-full'>
+              <svg
+                className='animate-spin h-5 w-5 text-white'
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'>
+                <circle
+                  className='opacity-25'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='4'
+                />
+                <path
+                  className='opacity-75'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8v8z'
+                />
+              </svg>
+            </div>
+          ) : (
+            <Phone className='h-10 w-10 p-3 bg-red-500 text-white rounded-full cursor-pointer' />
+          )}
+        </AlertConfirmation>
       </div>
+
       <h2 className='text-sm text-gray-400 text-center mt-5'>
         Interview in Progress....
       </h2>
