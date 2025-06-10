@@ -2,13 +2,22 @@
 import { InterviewDataContext } from "@/context/InterviewDataContext";
 import { Mic, Phone, Timer } from "lucide-react";
 import Image from "next/image";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import AlertConfirmation from "./_components/AlertConfirmation";
+import { toast } from "sonner";
+import axios from "axios";
+import { supabase } from "@/services/superbaseClient";
+import { useParams, useRouter } from "next/navigation";
 
 function StartInterview() {
   const { interviewInfo, setInterviewInfo } = useContext(InterviewDataContext);
   const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY);
+
+  const [activeuser, setActiveUser] = useState(false);
+  const [conversation, setConversation] = useState();
+  const { interview_id } = useParams();
+  const router = useRouter();
 
   useEffect(() => {
     interviewInfo && startCall();
@@ -82,6 +91,67 @@ Key Guidelines:
     vapi.stop();
   };
 
+  vapi.on("call-start", () => {
+    // console.log("call has started");
+    toast("Call Connected....");
+  });
+
+  vapi.on("speech-start", () => {
+    // console.log("Assitant speech has started");
+    setActiveUser(false);
+  });
+
+  vapi.on("speech-end", () => {
+    // console.log("Assitant speech has ended");
+    setActiveUser(true);
+  });
+
+  vapi.on("call-end", () => {
+    // console.log("call has ended");
+    toast("Enterview Ended....");
+    GenerateFeedback();
+  });
+
+  vapi.on("message", (message) => {
+    // console.log(message?.conversation);
+    setConversation(message?.conversation);
+  });
+
+  const GenerateFeedback = async () => {
+    const results = await axios.post("/api/ai-feedback", {
+      conversation: conversation,
+    });
+
+    console.log(results?.data);
+    const Content = results.data.content;
+    const FINAL_CONTENT = Content
+      ? Content.replace("```json", "").replace("```", "")
+      : "";
+    console.log(FINAL_CONTENT);
+
+    //save to db
+
+    const feedbackObject = {
+      message: FINAL_CONTENT, // keep it as a value inside a valid JSON object
+    };
+
+    const { data, error } = await supabase
+      .from("interview-feedback")
+      .insert([
+        {
+          userName: interviewInfo?.userName,
+          userEmail: interviewInfo?.userEmail,
+          interview_id: interview_id,
+          feedback: feedbackObject,
+          recommended: false,
+        },
+      ])
+      .select();
+
+    console.log(data);
+    router.replace("/interview/complited");
+  };
+
   return (
     <div className='p-20 lg:px-48 xl:px-56'>
       <h2 className='font-bold text-xl flex justify-between '>
@@ -93,19 +163,31 @@ Key Guidelines:
       </h2>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-7 mt-5'>
         <div className='bg-white shadow h-[400px] rounded-lg border flex flex-col gap-2  items-center justify-center'>
-          <Image
-            src={"/ai.jpeg"}
-            alt='ai'
-            width={100}
-            height={100}
-            className='w-[60px] h-[60px] rounded-full object-center'
-          />
-          <h2>AI Recruter</h2>
+          <div className='relative'>
+            {!activeuser && (
+              <span className='absolute inset-0 rounded-full bg-blue-500 opacity-75 animate-ping' />
+            )}
+
+            <Image
+              src={"/ai.jpeg"}
+              alt='ai'
+              width={100}
+              height={100}
+              className='w-[60px] h-[60px] rounded-full object-center'
+            />
+            <h2>AI Recruter</h2>
+          </div>
         </div>
         <div className='bg-white shadow h-[400px] rounded-lg border flex flex-col gap-2 items-center justify-center'>
-          <h2 className='text-2xl bg-primary text-white p-3 rounded-full px-5'>
-            {interviewInfo?.userName?.[0] || "U"}
-          </h2>
+          <div className='relative'>
+            {activeuser && (
+              <span className='absolute inset-0 rounded-full bg-blue-500 opacity-75 animate-ping' />
+            )}
+            <h2 className='text-2xl bg-primary text-white p-3 rounded-full px-5'>
+              {interviewInfo?.userName?.[0] || "U"}
+            </h2>
+          </div>
+
           <h2>{interviewInfo?.userName}</h2>
         </div>
       </div>
