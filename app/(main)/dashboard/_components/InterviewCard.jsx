@@ -3,6 +3,7 @@ import moment from "moment";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Copy, Send } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 function InterviewCard({ interviews, viewDetails = false }) {
   const url = process.env.NEXT_PUBLIC_HOST_URL + "/" + interviews?.interview_id;
@@ -48,9 +49,12 @@ function InterviewCard({ interviews, viewDetails = false }) {
           </div>
         </div>
       ) : (
-        <Button className='mt-5 w-full' variant={"outline"}>
-          View Detail <ArrowRight />
-        </Button>
+        <Link
+          href={"/schedule-interview/" + interviews?.interview_id + "/details"}>
+          <Button className='mt-5 w-full' variant={"outline"}>
+            View Detail <ArrowRight />
+          </Button>
+        </Link>
       )}
     </div>
   );
