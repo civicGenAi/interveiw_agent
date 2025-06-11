@@ -30,7 +30,7 @@ function CandidateFeedbackDialog({ candidate }) {
 
   const recommendationMsg = feedback?.RecommendationMsg?.trim()
     ? feedback.RecommendationMsg
-    : "No feedback message was provided. Please follow up with the assessment team for clarification while Try angain.";
+    : "No feedback message was provided the Interview was not complited or aborted. Please follow up with the assessment team for clarification while Try angain.";
 
   return (
     <Dialog>
