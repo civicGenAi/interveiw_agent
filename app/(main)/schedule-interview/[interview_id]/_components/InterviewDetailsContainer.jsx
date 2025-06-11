@@ -43,7 +43,7 @@ function InterviewDetailsContainer({ interviewDetails }) {
         <h2 className='font-bold'>Interview Questions</h2>
         <div className='grid grid-cols-2 gap-3  mt-3'>
           {interviewDetails?.questionList.map((item, index) => (
-            <h2 className='text-xs'>
+            <h2 className='text-xs' key={index}>
               {" "}
               <MessageCircleMore className='text-primary' /> {index + 1}.
               {item?.question}
