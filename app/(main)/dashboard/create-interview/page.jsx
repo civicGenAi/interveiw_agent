@@ -7,12 +7,15 @@ import FormContainer from "./_components/FormContainer";
 import QuestionList from "./_components/QuestionList";
 import { toast } from "sonner";
 import InterviewLink from "./_components/InterviewLink";
+import { useUser } from "@/app/provider";
+import { supabase } from "@/services/superbaseClient";
 
 function CreateInterview() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState();
   const [interviewId, setInterviewId] = useState();
+  const { user } = useUser();
   const onHandleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -21,7 +24,24 @@ function CreateInterview() {
     console.log("FormData", formData);
   };
 
-  const onGoToNext = () => {
+  const onGoToNext = async () => {
+    // Fetch latest user credits
+    const { data: userData, error } = await supabase
+      .from("users")
+      .select("credits")
+      .eq("email", user?.email)
+      .single();
+
+    if (error) {
+      toast("Error fetching user data");
+      return;
+    }
+
+    if (userData?.credits <= 0) {
+      toast("Please add credits");
+      return;
+    }
+
     if (
       !formData?.jobPosition ||
       !formData?.jobDescription ||
@@ -31,6 +51,7 @@ function CreateInterview() {
       toast("Please enter details to continue");
       return;
     }
+
     setStep(step + 1);
   };
 

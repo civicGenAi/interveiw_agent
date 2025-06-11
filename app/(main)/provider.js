@@ -10,7 +10,7 @@ function DashBoardProvider({ children }) {
       <AppSidebar />
       <Provider>
         <div className='w-full p-10'>
-          {/* <SidebarTrigger /> */}
+          <SidebarTrigger />
           <WelcomeContainer />
 
           {children}
