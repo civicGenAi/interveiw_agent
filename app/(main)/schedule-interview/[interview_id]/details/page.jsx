@@ -4,6 +4,7 @@ import { supabase } from "@/services/superbaseClient";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import InterviewDetailsContainer from "../_components/InterviewDetailsContainer";
+import CandidateList from "../_components/CandidateList";
 
 function InterviewDetail() {
   const { interview_id } = useParams();
@@ -26,12 +27,13 @@ function InterviewDetail() {
     //   .order("id", { ascending: false });
 
     setInterviewDetail(result?.data[0]);
-    console.log(result);
+    // console.log(result);
   };
   return (
     <div className='mt-5'>
       <h2 className='font-bold text-xl'>Intervew Details</h2>
       <InterviewDetailsContainer interviewDetails={interviewDetails} />
+      <CandidateList candidatelist={interviewDetails?.["interview_feedback"]} />
     </div>
   );
 }
