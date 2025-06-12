@@ -1,6 +1,6 @@
 "use client";
 import { useUser } from "@/app/provider";
-import Image from "next/image";
+import UserDropDown from "./UserDropDown";
 
 function WelcomeContainer() {
   const { user } = useUser();
@@ -10,22 +10,14 @@ function WelcomeContainer() {
   }
 
   return (
-    <div className='bg-white shadow  p-5 rounded-xl flex justify-between items-center'>
+    <div className='bg-white shadow p-5 rounded-xl flex justify-between items-center'>
       <div>
         <h2 className='text-lg font-bold'>Welcome Back, {user.name}</h2>
         <h2 className='text-gray-500'>
           AI-Driven Interviews, Interview Made Easy
         </h2>
       </div>
-      {user && (
-        <Image
-          src={user?.picture}
-          alt='userAvator'
-          width={40}
-          height={40}
-          className='rounded-full'
-        />
-      )}
+      <UserDropDown />
     </div>
   );
 }

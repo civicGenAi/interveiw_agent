@@ -87,7 +87,7 @@ function Interview() {
     //adding some deley
     setTimeout(() => {
       router.push("/interview/" + interview_id + "/start");
-    }, 50);
+    }, 5);
 
     setLoading(false);
   };

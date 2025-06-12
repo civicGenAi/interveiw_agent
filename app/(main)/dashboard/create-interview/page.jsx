@@ -9,6 +9,18 @@ import { toast } from "sonner";
 import InterviewLink from "./_components/InterviewLink";
 import { useUser } from "@/app/provider";
 import { supabase } from "@/services/superbaseClient";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import CheckoutPage from "@/components/CheckoutPage";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import convertToSubcurrency from "@/lib/convertToSubcurrency";
 
 function CreateInterview() {
   const router = useRouter();
@@ -16,6 +28,11 @@ function CreateInterview() {
   const [formData, setFormData] = useState();
   const [interviewId, setInterviewId] = useState();
   const { user } = useUser();
+  const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY);
+  const [amount, setAmount] = useState(10); // dynamic
+
+  const [showStripeDialog, setShowStripeDialog] = useState(false);
+
   const onHandleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -25,7 +42,6 @@ function CreateInterview() {
   };
 
   const onGoToNext = async () => {
-    // Fetch latest user credits
     const { data: userData, error } = await supabase
       .from("users")
       .select("credits")
@@ -38,7 +54,7 @@ function CreateInterview() {
     }
 
     if (userData?.credits <= 0) {
-      toast("Please add credits");
+      setShowStripeDialog(true);
       return;
     }
 
@@ -61,26 +77,50 @@ function CreateInterview() {
   };
 
   return (
-    <div className='mt-10 px-10 md:px-24 lg:px-44 xl:px-56'>
-      <div className='flex gap-5 items-center'>
-        <ArrowLeft onClick={() => router.back()} className='cursor-pointer' />
-        <h2 className='font-bold text-2xl'>Create New Interview</h2>
+    <>
+      {/* Stripe Dialog */}
+      <Dialog open={showStripeDialog} onOpenChange={setShowStripeDialog}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <h3 className='text-lg font-semibold'>Add Credits</h3>
+          </DialogHeader>
+          <DialogTitle className='text-xl font-semibold'>
+            Complete Your Payment
+          </DialogTitle>
+          <Elements
+            stripe={stripePromise}
+            options={{
+              mode: "payment",
+              amount: convertToSubcurrency(amount),
+              currency: "usd",
+            }}>
+            <CheckoutPage amount={amount} />
+          </Elements>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Component UI */}
+      <div className='mt-10 px-10 md:px-24 lg:px-44 xl:px-56'>
+        <div className='flex gap-5 items-center'>
+          <ArrowLeft onClick={() => router.back()} className='cursor-pointer' />
+          <h2 className='font-bold text-2xl'>Create New Interview</h2>
+        </div>
+        <Progress value={step * 33.33} className='my-5' />
+        {step == 1 ? (
+          <FormContainer
+            onHandleInputChange={onHandleInputChange}
+            GoToNext={() => onGoToNext()}
+          />
+        ) : step == 2 ? (
+          <QuestionList
+            formData={formData}
+            onCreateLink={(interview_id) => onCreateLink(interview_id)}
+          />
+        ) : step == 3 ? (
+          <InterviewLink interview_id={interviewId} formData={formData} />
+        ) : null}
       </div>
-      <Progress value={step * 33.33} className='my-5' />
-      {step == 1 ? (
-        <FormContainer
-          onHandleInputChange={onHandleInputChange}
-          GoToNext={() => onGoToNext()}
-        />
-      ) : step == 2 ? (
-        <QuestionList
-          formData={formData}
-          onCreateLink={(interview_id) => onCreateLink(interview_id)}
-        />
-      ) : step == 3 ? (
-        <InterviewLink interview_id={interviewId} formData={formData} />
-      ) : null}
-    </div>
+    </>
   );
 }
 

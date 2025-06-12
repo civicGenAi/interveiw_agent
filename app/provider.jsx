@@ -1,5 +1,4 @@
 "use client";
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/services/superbaseClient";
 
@@ -18,12 +17,10 @@ function Provider({ children }) {
       // Step 1: Check if session exists
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession();
-
       if (sessionError) {
         console.error("Session error:", sessionError);
         return;
       }
-
       if (!sessionData?.session) {
         console.warn("No session found. User not logged in.");
         return;
@@ -34,17 +31,14 @@ function Provider({ children }) {
         data: { user: authUser },
         error: authError,
       } = await supabase.auth.getUser();
-
       if (authError) {
         console.error("Error getting authenticated user:", authError);
         return;
       }
-
       if (!authUser) {
         console.warn("Authenticated user is null.");
         return;
       }
-
       console.log("Authenticated User:", authUser);
 
       // Step 3: Check if user exists in the database
@@ -52,7 +46,6 @@ function Provider({ children }) {
         .from("users")
         .select("*")
         .eq("email", authUser.email);
-
       if (fetchError) {
         console.error("Error fetching user:", fetchError);
         return;
@@ -71,12 +64,10 @@ function Provider({ children }) {
           ])
           .select()
           .single();
-
         if (insertError) {
           console.error("Error inserting new user:", insertError);
           return;
         }
-
         console.log("New user inserted:", newUser);
         setUser(newUser);
       } else {
@@ -88,8 +79,24 @@ function Provider({ children }) {
     }
   };
 
+  // Logout function
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error logging out:", error);
+        return;
+      }
+      setUser(null);
+      // Optionally redirect to login page
+      window.location.href = "/auth"; // or use router.push('/login')
+    } catch (error) {
+      console.error("Unexpected error during logout:", error);
+    }
+  };
+
   return (
-    <UserDetailsContext.Provider value={{ user, setUser }}>
+    <UserDetailsContext.Provider value={{ user, setUser, logout }}>
       {children}
     </UserDetailsContext.Provider>
   );
