@@ -96,7 +96,7 @@ function Interview() {
     <div className='px-10 md:px-28 lg:px-48 xl:px-64 mt-16'>
       <div className='flex flex-col justify-center items-center border p-7 rounded-lg bg-white shadow lg:px-33 xl:px-52  mb-20'>
         <Image
-          src={"/logo1.png"}
+          src={"/logo.png"}
           alt='logo'
           width={100}
           height={100}

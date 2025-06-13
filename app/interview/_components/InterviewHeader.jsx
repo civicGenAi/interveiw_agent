@@ -5,11 +5,11 @@ function InterviewHeader() {
   return (
     <div className='p-4 shadow-sm'>
       <Image
-        src={"/logo1.png"}
+        src={"/logo.png"}
         alt='logo'
         width={100}
         height={100}
-        className='w-[140px]'
+        className='w-[90px] h-[90px]'
       />
     </div>
   );
